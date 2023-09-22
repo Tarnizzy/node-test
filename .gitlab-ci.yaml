@@ -1,0 +1,33 @@
+stages:
+  - build
+  - push
+  - deploy
+  
+build_app:
+  stage: build
+  image: docker
+  services:
+  - docker:dind
+
+  script:
+  - docker build -t 31801943/centos:latest .
+  - docker login -u 31801943 -p Apple103726
+  - docker push 31801943/centos:latest
+  
+.Push to Docker Hub:
+  stage: push
+  image: docker
+  services:
+  - docker:dind
+
+  script:
+  - docker images
+  - docker push 31801943/$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+ 
+
+.deploy:
+  stage: deploy
+  image: bitnami/kubectl
+  script:
+  - kubectl create deployment phphelloworld --image=$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  - kubectl export deployment phphelloworld --port 80 --target-port 8080 type=NodePort
