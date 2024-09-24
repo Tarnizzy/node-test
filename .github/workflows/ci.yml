@@ -31,6 +31,49 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # # Run tests
-      # - name: Run tests
-      #   run: npm test
+      - name: Build the project
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifact
+          path: ./dist # Assuming the build output is in the 'dist' folder 
+
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build # This ensures the test job runs after the build job
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifact
+          path: ./dist
+
+      - name: Run tests on the artifact
+        run: npm test
+
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   needs: build
+  #   if: github.ref == 'refs/heads/main'
+
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
+
+  #     # Use SSH to deploy to the server
+  #     - name: Setup SSH
+  #       uses: webfactory/ssh-agent@v0.8.1
+  #       with:
+  #         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+  #     - name: Deploy via SSH
+  #       run: |
+  #         ssh -o StrictHostKeyChecking=no user@your-server-ip '
+  #           cd /path/to/your/project &&
+  #           git pull origin main &&
+  #           npm install &&
+  #           pm2 restart all' # Or any command to start/restart your app
